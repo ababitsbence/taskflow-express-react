@@ -5,6 +5,8 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const taskRoutes = require('./routes/tasks');
+
 app.use(cors());
 app.use(express.json());
 
@@ -15,6 +17,8 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
     res.json({ status: 'OK' });
 });
+
+app.use('/tasks', taskRoutes);
 
 app.use((req, res) => {
     res.status(404).json({ error: 'Not found' });
