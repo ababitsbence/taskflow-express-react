@@ -22,29 +22,39 @@ function Login() {
     };
 
     return (
-        <div>
-            <h1>Login</h1>
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                <button type="submit">Log In</button>
-            </form>
-            <p>
-                Don't have an account? <Link to="/register">Register</Link>
-            </p>
+        <div className="auth-page">
+            <div className="auth-card">
+                <h1>Log in</h1>
+                <form className="auth-form" onSubmit={handleSubmit}>
+                    <div className="field">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            id="email"
+                            type="email"
+                            autoComplete="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="field">
+                        <label htmlFor="password">Password</label>
+                        <input
+                            id="password"
+                            type="password"
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
+                    {error && <p className="form-error">{error}</p>}
+                    <button type="submit">Log in</button>
+                </form>
+                <p className="auth-footer">
+                    Don't have an account? <Link to="/register">Register</Link>
+                </p>
+            </div>
         </div>
     );
 }
