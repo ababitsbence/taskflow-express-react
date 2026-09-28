@@ -14,6 +14,9 @@ router.post('/', async (req, res) => {
     }
 
     try {
+        if (category_id && !(await categoryBelongsToUser(category_id, user_id))) {
+            return res.status(400).json({ error: 'Invalid category' });
+        }
         const result = await pool.query(
             `INSERT INTO tasks (user_id, category_id, title, description, status)
              VALUES ($1, $2, $3, $4, $5)
@@ -69,6 +72,10 @@ router.put('/:id', async (req, res) => {
     }
 
     try {
+        if (category_id && !(await categoryBelongsToUser(category_id, req.user.id))) {
+            return res.status(400).json({ error: 'Invalid category' });
+        }
+
         const result = await pool.query(
             `UPDATE tasks
              SET category_id = $1, title = $2, description = $3, status = $4
@@ -107,5 +114,13 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to delete task' });
     }
 });
+
+async function categoryBelongsToUser(categoryId, userId) {
+    const result = await pool.query(
+        'SELECT 1 FROM categories WHERE id = $1 AND user_id = $2',
+        [categoryId, userId]
+    );
+    return result.rows.length > 0;
+}
 
 module.exports = router;
