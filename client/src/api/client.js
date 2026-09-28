@@ -12,4 +12,18 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const isAuthRequest = error.config?.url?.startsWith('/auth/');
+
+        if (error.response?.status === 401 && !isAuthRequest) {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+
+        return Promise.reject(error);
+    }
+);
+
 export default api;
