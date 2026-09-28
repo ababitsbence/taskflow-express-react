@@ -185,9 +185,9 @@ function Dashboard() {
                     onChange={(e) => setEditTitle(e.target.value)}
                 />
                 <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
-                    <option value="todo">todo</option>
-                    <option value="in-progress">in-progress</option>
-                    <option value="done">done</option>
+                    <option value="todo">To do</option>
+                    <option value="in-progress">In progress</option>
+                    <option value="done">Done</option>
                 </select>
                 <select value={editCategoryId} onChange={(e) => setEditCategoryId(e.target.value)}>
                     <option value="">No category</option>
