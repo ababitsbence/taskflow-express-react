@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getTasks, createTask, updateTask, deleteTask } from '../api/tasks';
 import { getCategories, createCategory, deleteCategory } from '../api/categories';
+import TaskBoard from '../components/TaskBoard';
 
 function Dashboard() {
     const [tasks, setTasks] = useState([]);
@@ -18,7 +19,6 @@ function Dashboard() {
     const [editCategoryId, setEditCategoryId] = useState('');
 
     const [filterCategory, setFilterCategory] = useState('all');
-    const [filterStatus, setFilterStatus] = useState('all');
     const [sortOrder, setSortOrder] = useState('newest');
 
     const fetchTasks = async () => {
@@ -88,9 +88,12 @@ function Dashboard() {
     const handleUpdate = async (id) => {
         if (!editTitle.trim()) return;
 
+        const task = tasks.find((t) => t.id === id);
+
         try {
             await updateTask(id, {
                 title: editTitle,
+                description: task?.description,
                 status: editStatus,
                 category_id: editCategoryId ? Number(editCategoryId) : null,
             });
@@ -125,12 +128,27 @@ function Dashboard() {
         }
     };
 
+    const handleMove = async (task, newStatus) => {
+        setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)));
+
+        try {
+            await updateTask(task.id, {
+                title: task.title,
+                description: task.description,
+                category_id: task.category_id,
+                status: newStatus,
+            });
+        } catch (err) {
+            setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t)));
+            setError('Failed to move task');
+        }
+    };
+
     const getCategoryName = (id) => {
         return categories.find((c) => c.id === id)?.name || 'Uncategorized';
     };
 
     const visibleTasks = tasks
-        .filter((t) => filterStatus === 'all' || t.status === filterStatus)
         .filter((t) => {
             if (filterCategory === 'all') return true;
             if (filterCategory === 'none') return t.category_id === null;
@@ -140,6 +158,38 @@ function Dashboard() {
             sortOrder === 'newest'
                 ? new Date(b.created_at) - new Date(a.created_at)
                 : new Date(a.created_at) - new Date(b.created_at)
+        );
+
+    const renderTask = (task) =>
+        editingId === task.id ? (
+            <div>
+                <input
+                    type="text"
+                    maxLength={100}
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                />
+                <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
+                    <option value="todo">todo</option>
+                    <option value="in-progress">in-progress</option>
+                    <option value="done">done</option>
+                </select>
+                <select value={editCategoryId} onChange={(e) => setEditCategoryId(e.target.value)}>
+                    <option value="">No category</option>
+                    {categories.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                </select>
+                <button onClick={() => handleUpdate(task.id)}>Save</button>
+                <button onClick={cancelEditing}>Cancel</button>
+            </div>
+        ) : (
+            <div>
+                <strong>{task.title}</strong>
+                <div>{getCategoryName(task.category_id)}</div>
+                <button onClick={() => startEditing(task)}>Edit</button>
+                <button onClick={() => handleDelete(task.id)}>Delete</button>
+            </div>
         );
 
     return (
@@ -193,53 +243,13 @@ function Dashboard() {
                         <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                 </select>
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                    <option value="all">All statuses</option>
-                    <option value="todo">todo</option>
-                    <option value="in-progress">in-progress</option>
-                    <option value="done">done</option>
-                </select>
                 <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
                     <option value="newest">Newest first</option>
                     <option value="oldest">Oldest first</option>
                 </select>
             </div>
 
-            {visibleTasks.length === 0 && <p>No tasks match.</p>}
-
-            <ul>
-                {visibleTasks.map((task) =>
-                    editingId === task.id ? (
-                        <li key={task.id}>
-                            <input
-                                type="text"
-                                maxLength={100}
-                                value={editTitle}
-                                onChange={(e) => setEditTitle(e.target.value)}
-                            />
-                            <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
-                                <option value="todo">todo</option>
-                                <option value="in-progress">in-progress</option>
-                                <option value="done">done</option>
-                            </select>
-                            <select value={editCategoryId} onChange={(e) => setEditCategoryId(e.target.value)}>
-                                <option value="">No category</option>
-                                {categories.map((c) => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
-                            <button onClick={() => handleUpdate(task.id)}>Save</button>
-                            <button onClick={cancelEditing}>Cancel</button>
-                        </li>
-                    ) : (
-                        <li key={task.id}>
-                            {task.title} — {task.status} — {getCategoryName(task.category_id)}
-                            <button onClick={() => startEditing(task)}>Edit</button>
-                            <button onClick={() => handleDelete(task.id)}>Delete</button>
-                        </li>
-                    )
-                )}
-            </ul>
+            <TaskBoard tasks={visibleTasks} onMove={handleMove} renderTask={renderTask} />
         </div>
     );
 }
