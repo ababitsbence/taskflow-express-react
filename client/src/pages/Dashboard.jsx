@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { getTasks, createTask, updateTask, deleteTask } from '../api/tasks';
 import { getCategories, createCategory, deleteCategory } from '../api/categories';
 import TaskBoard from '../components/TaskBoard';
+import ErrorBanner from '../components/ErrorBanner';
 
 function Dashboard() {
+    const navigate = useNavigate();
+
     const [tasks, setTasks] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     const [title, setTitle] = useState('');
@@ -41,11 +45,14 @@ function Dashboard() {
     };
 
     useEffect(() => {
-        fetchTasks();
-        fetchCategories();
+        Promise.all([fetchTasks(), fetchCategories()]).finally(() => setLoading(false));
     }, []);
 
-    const navigate = useNavigate();
+    useEffect(() => {
+        if (!error) return;
+        const timer = setTimeout(() => setError(''), 5000);
+        return () => clearTimeout(timer);
+    }, [error]);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -211,7 +218,7 @@ function Dashboard() {
                 <button className="secondary" onClick={handleLogout}>Log out</button>
             </header>
 
-            {error && <p className="form-error">{error}</p>}
+            <ErrorBanner message={error} onDismiss={() => setError('')} />
 
             <section className="panel">
                 <h2>Categories</h2>
@@ -225,6 +232,9 @@ function Dashboard() {
                     />
                     <button type="submit">Add Category</button>
                 </form>
+                {!loading && categories.length === 0 && (
+                    <p className="empty-column">No categories yet. Add one above.</p>
+                )}
                 <ul className="chips">
                     {categories.map((c) => (
                         <li key={c.id} className="chip">
@@ -274,7 +284,15 @@ function Dashboard() {
                 </select>
             </div>
 
-            <TaskBoard tasks={visibleTasks} onMove={handleMove} renderTask={renderTask} />
+            {loading ? (
+                <div className="spinner" role="status" aria-label="Loading tasks" />
+            ) : tasks.length === 0 ? (
+                <p className="empty-state">No tasks yet. Add your first task above.</p>
+            ) : visibleTasks.length === 0 ? (
+                <p className="empty-state">No tasks match this filter.</p>
+            ) : (
+                <TaskBoard tasks={visibleTasks} onMove={handleMove} renderTask={renderTask} />
+            )}
         </div>
     );
 }

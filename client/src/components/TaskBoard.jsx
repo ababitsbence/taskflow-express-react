@@ -42,6 +42,7 @@ function Column({ id, label, count, children }) {
     return (
         <div ref={setNodeRef} className={`column${isOver ? ' column-over' : ''}`}>
             <h3>{label} ({count})</h3>
+            {count === 0 && <p className="empty-column">Drop tasks here</p>}
             {children}
         </div>
     );
