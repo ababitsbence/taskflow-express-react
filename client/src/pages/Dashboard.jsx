@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getTasks, createTask, updateTask, deleteTask } from '../api/tasks';
 import { getCategories, createCategory, deleteCategory } from '../api/categories';
 import TaskBoard from '../components/TaskBoard';
@@ -43,6 +44,13 @@ function Dashboard() {
         fetchTasks();
         fetchCategories();
     }, []);
+
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        navigate('/login');
+    };
 
     const handleCreate = async (e) => {
         e.preventDefault();
@@ -162,7 +170,7 @@ function Dashboard() {
 
     const renderTask = (task) =>
         editingId === task.id ? (
-            <div>
+            <div className="edit-form">
                 <input
                     type="text"
                     maxLength={100}
@@ -180,62 +188,79 @@ function Dashboard() {
                         <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                 </select>
-                <button onClick={() => handleUpdate(task.id)}>Save</button>
-                <button onClick={cancelEditing}>Cancel</button>
+                <div className="task-actions">
+                    <button onClick={() => handleUpdate(task.id)}>Save</button>
+                    <button className="secondary" onClick={cancelEditing}>Cancel</button>
+                </div>
             </div>
         ) : (
             <div>
-                <strong>{task.title}</strong>
-                <div>{getCategoryName(task.category_id)}</div>
-                <button onClick={() => startEditing(task)}>Edit</button>
-                <button onClick={() => handleDelete(task.id)}>Delete</button>
+                <strong className="task-title">{task.title}</strong>
+                <span className="badge">{getCategoryName(task.category_id)}</span>
+                <div className="task-actions">
+                    <button className="secondary" onClick={() => startEditing(task)}>Edit</button>
+                    <button className="danger" onClick={() => handleDelete(task.id)}>Delete</button>
+                </div>
             </div>
         );
 
     return (
-        <div>
-            <h1>Dashboard</h1>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+        <div className="container">
+            <header className="page-header">
+                <h1>Dashboard</h1>
+                <button className="secondary" onClick={handleLogout}>Log out</button>
+            </header>
 
-            <h2>Categories</h2>
-            <form onSubmit={handleCreateCategory}>
-                <input
-                    type="text"
-                    placeholder="New category name"
-                    maxLength={50}
-                    value={categoryName}
-                    onChange={(e) => setCategoryName(e.target.value)}
-                />
-                <button type="submit">Add Category</button>
-            </form>
-            <ul>
-                {categories.map((c) => (
-                    <li key={c.id}>
-                        {c.name}
-                        <button onClick={() => handleDeleteCategory(c.id)}>Delete</button>
-                    </li>
-                ))}
-            </ul>
+            {error && <p className="form-error">{error}</p>}
 
-            <h2>Tasks</h2>
-            <form onSubmit={handleCreate}>
-                <input
-                    type="text"
-                    placeholder="New task title"
-                    maxLength={100}
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                />
-                <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-                    <option value="">No category</option>
+            <section className="panel">
+                <h2>Categories</h2>
+                <form className="row" onSubmit={handleCreateCategory}>
+                    <input
+                        type="text"
+                        placeholder="New category name"
+                        maxLength={50}
+                        value={categoryName}
+                        onChange={(e) => setCategoryName(e.target.value)}
+                    />
+                    <button type="submit">Add Category</button>
+                </form>
+                <ul className="chips">
                     {categories.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
+                        <li key={c.id} className="chip">
+                            {c.name}
+                            <button
+                                onClick={() => handleDeleteCategory(c.id)}
+                                aria-label={`Delete category ${c.name}`}
+                            >
+                                ×
+                            </button>
+                        </li>
                     ))}
-                </select>
-                <button type="submit">Add Task</button>
-            </form>
+                </ul>
+            </section>
 
-            <div>
+            <section className="panel">
+                <h2>New task</h2>
+                <form className="row" onSubmit={handleCreate}>
+                    <input
+                        type="text"
+                        placeholder="New task title"
+                        maxLength={100}
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                    />
+                    <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+                        <option value="">No category</option>
+                        {categories.map((c) => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                    </select>
+                    <button type="submit">Add Task</button>
+                </form>
+            </section>
+
+            <div className="row toolbar">
                 <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
                     <option value="all">All categories</option>
                     <option value="none">Uncategorized</option>

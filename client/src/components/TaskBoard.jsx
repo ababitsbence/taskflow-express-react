@@ -12,28 +12,26 @@ function TaskCard({ task, children }) {
 
     const style = {
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-        opacity: isDragging ? 0.7 : 1,
         position: 'relative',
         zIndex: isDragging ? 10 : undefined,
-        background: 'Canvas',
-        border: '1px solid #666',
-        borderRadius: 6,
-        padding: 8,
-        marginBottom: 8,
     };
 
     return (
-        <div ref={setNodeRef} style={style}>
+        <div
+            ref={setNodeRef}
+            style={style}
+            className={`task-card${isDragging ? ' task-card-dragging' : ''}`}
+        >
             <button
                 ref={setActivatorNodeRef}
                 {...listeners}
                 {...attributes}
-                style={{ cursor: 'grab', touchAction: 'none' }}
+                className="drag-handle"
                 aria-label="Drag task"
             >
                 ⠿
             </button>
-            {children}
+            <div className="task-body">{children}</div>
         </div>
     );
 }
@@ -42,16 +40,7 @@ function Column({ id, label, count, children }) {
     const { setNodeRef, isOver } = useDroppable({ id });
 
     return (
-        <div
-            ref={setNodeRef}
-            style={{
-                flex: 1,
-                minWidth: 220,
-                minHeight: 200,
-                padding: 8,
-                border: `2px ${isOver ? 'dashed' : 'solid'} ${isOver ? '#888' : 'transparent'}`,
-            }}
-        >
+        <div ref={setNodeRef} className={`column${isOver ? ' column-over' : ''}`}>
             <h3>{label} ({count})</h3>
             {children}
         </div>
@@ -70,7 +59,7 @@ function TaskBoard({ tasks, onMove, renderTask }) {
 
     return (
         <DndContext onDragEnd={handleDragEnd}>
-            <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+            <div className="board">
                 {COLUMNS.map((col) => {
                     const columnTasks = tasks.filter((t) => t.status === col.id);
                     return (
