@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
 
-COPY index.js db.js ./
+COPY index.js db.js app.js ./
 COPY ./routes /app/routes
 COPY ./middleware /app/middleware
 
